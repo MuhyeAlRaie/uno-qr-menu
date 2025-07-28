@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test - UNO QR Menu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8f6f0 0%, #fff 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .test-container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        .status-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .status-success { color: #28a745; }
+        .status-error { color: #dc3545; }
+        .status-warning { color: #ffc107; }
+        .status-info { color: #17a2b8; }
+        .test-result {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-left: 4px solid #dee2e6;
+        }
+        .test-result.success { border-left-color: #28a745; }
+        .test-result.error { border-left-color: #dc3545; }
+        .test-result.warning { border-left-color: #ffc107; }
+        .config-display {
+            background: #f1f3f4;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="text-center">
+            <h1 class="mb-4">
+                <i class="fas fa-database text-primary"></i>
+                Supabase Connection Test
+            </h1>
+            <p class="text-muted">Testing connection to your Supabase database</p>
+        </div>
+
+        <div id="testResults">
+            <div class="text-center">
+                <i class="fas fa-spinner fa-spin status-icon status-info"></i>
+                <p>Initializing connection test...</p>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button id="retestBtn" class="btn btn-primary w-100" onclick="runTests()" disabled>
+                <i class="fas fa-redo"></i> Run Test Again
+            </button>
+        </div>
+
+        <div class="mt-4">
+            <h5>Configuration Check</h5>
+            <div id="configDisplay" class="config-display">
+                Loading configuration...
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h5>Troubleshooting Steps</h5>
+            <ol class="small">
+                <li>Verify your Supabase URL ends with <code>.supabase.co</code></li>
+                <li>Check that your anon key is correctly copied from Supabase dashboard</li>
+                <li>Ensure your Supabase project is active and not paused</li>
+                <li>Verify the database schema has been created using the provided SQL</li>
+                <li>Check browser console for detailed error messages</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Include Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Include configuration -->
+    <script src="config.js"></script>
+
+    <script>
+        let supabase;
+        
+        async function runTests() {
+            const resultsDiv = document.getElementById('testResults');
+            const retestBtn = document.getElementById('retestBtn');
+            
+            retestBtn.disabled = true;
+            resultsDiv.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin status-icon status-info"></i>
+                    <p>Running connection tests...</p>
+                </div>
+            `;
+
+            const tests = [];
+
+            // Test 1: Configuration Check
+            tests.push(await testConfiguration());
+            
+            // Test 2: Supabase Client Initialization
+            tests.push(await testClientInitialization());
+            
+            // Test 3: Database Connection
+            tests.push(await testDatabaseConnection());
+            
+            // Test 4: Schema Validation
+            tests.push(await testSchemaValidation());
+
+            // Display results
+            displayResults(tests);
+            retestBtn.disabled = false;
+        }
+
+        async function testConfiguration() {
+            try {
+                const config = {
+                    url: SUPABASE_CONFIG.url,
+                    anonKey: SUPABASE_CONFIG.anonKey
+                };
+
+                document.getElementById('configDisplay').innerHTML = `
+                    <strong>Supabase URL:</strong> ${config.url}<br>
+                    <strong>Anon Key:</strong> ${config.anonKey.substring(0, 20)}...${config.anonKey.substring(config.anonKey.length - 10)}<br>
+                    <strong>Cloudinary Cloud:</strong> ${CLOUDINARY_CONFIG.cloudName}
+                `;
+
+                if (config.url === 'https://your-project-id.supabase.co' || config.url === 'YOUR_SUPABASE_URL') {
+                    return {
+                        name: 'Configuration Check',
+                        status: 'error',
+                        message: 'Configuration contains placeholder values. Please update config.js with your actual Supabase credentials.',
+                        details: 'URL and/or anon key are still set to placeholder values.'
+                    };
+                }
+
+                if (!config.url.includes('.supabase.co')) {
+                    return {
+                        name: 'Configuration Check',
+                        status: 'error',
+                        message: 'Invalid Supabase URL format. URL should end with .supabase.co',
+                        details: `Current URL: ${config.url}`
+                    };
+                }
+
+                if (config.anonKey === 'your-anon-key-here' || config.anonKey === 'YOUR_SUPABASE_ANON_KEY') {
+                    return {
+                        name: 'Configuration Check',
+                        status: 'error',
+                        message: 'Anon key is still set to placeholder value.',
+                        details: 'Please update the anon key in config.js with your actual Supabase anon key.'
+                    };
+                }
+
+                return {
+                    name: 'Configuration Check',
+                    status: 'success',
+                    message: 'Configuration appears valid.',
+                    details: `URL: ${config.url}`
+                };
+            } catch (error) {
+                return {
+                    name: 'Configuration Check',
+                    status: 'error',
+                    message: 'Error reading configuration.',
+                    details: error.message
+                };
+            }
+        }
+
+        async function testClientInitialization() {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+                
+                return {
+                    name: 'Client Initialization',
+                    status: 'success',
+                    message: 'Supabase client initialized successfully.',
+                    details: 'Client object created without errors.'
+                };
+            } catch (error) {
+                return {
+                    name: 'Client Initialization',
+                    status: 'error',
+                    message: 'Failed to initialize Supabase client.',
+                    details: error.message
+                };
+            }
+        }
+
+        async function testDatabaseConnection() {
+            try {
+                if (!supabase) {
+                    return {
+                        name: 'Database Connection',
+                        status: 'error',
+                        message: 'Cannot test connection - client not initialized.',
+                        details: 'Supabase client initialization failed.'
+                    };
+                }
+
+                // Try a simple query to test connection
+                const { data, error } = await supabase
+                    .from('categories')
+                    .select('count')
+                    .limit(1);
+
+                if (error) {
+                    return {
+                        name: 'Database Connection',
+                        status: 'error',
+                        message: 'Database connection failed.',
+                        details: `${error.message} (Code: ${error.code})`
+                    };
+                }
+
+                return {
+                    name: 'Database Connection',
+                    status: 'success',
+                    message: 'Successfully connected to database.',
+                    details: 'Basic query executed without errors.'
+                };
+            } catch (error) {
+                return {
+                    name: 'Database Connection',
+                    status: 'error',
+                    message: 'Connection test failed.',
+                    details: error.message
+                };
+            }
+        }
+
+        async function testSchemaValidation() {
+            try {
+                if (!supabase) {
+                    return {
+                        name: 'Schema Validation',
+                        status: 'error',
+                        message: 'Cannot validate schema - client not initialized.',
+                        details: 'Supabase client initialization failed.'
+                    };
+                }
+
+                const tables = ['categories', 'menu_items', 'item_prices', 'quick_actions', 'orders', 'order_items', 'quick_action_requests'];
+                const results = [];
+
+                for (const table of tables) {
+                    try {
+                        const { data, error } = await supabase
+                            .from(table)
+                            .select('*')
+                            .limit(1);
+
+                        if (error) {
+                            results.push(`❌ ${table}: ${error.message}`);
+                        } else {
+                            results.push(`✅ ${table}: OK`);
+                        }
+                    } catch (err) {
+                        results.push(`❌ ${table}: ${err.message}`);
+                    }
+                }
+
+                const failedTables = results.filter(r => r.includes('❌'));
+                
+                if (failedTables.length > 0) {
+                    return {
+                        name: 'Schema Validation',
+                        status: 'warning',
+                        message: `${failedTables.length} table(s) have issues.`,
+                        details: results.join('<br>')
+                    };
+                }
+
+                return {
+                    name: 'Schema Validation',
+                    status: 'success',
+                    message: 'All required tables are accessible.',
+                    details: results.join('<br>')
+                };
+            } catch (error) {
+                return {
+                    name: 'Schema Validation',
+                    status: 'error',
+                    message: 'Schema validation failed.',
+                    details: error.message
+                };
+            }
+        }
+
+        function displayResults(tests) {
+            const resultsDiv = document.getElementById('testResults');
+            let html = '';
+
+            const overallStatus = tests.every(t => t.status === 'success') ? 'success' : 
+                                 tests.some(t => t.status === 'error') ? 'error' : 'warning';
+
+            const statusIcons = {
+                success: 'fas fa-check-circle status-success',
+                error: 'fas fa-times-circle status-error',
+                warning: 'fas fa-exclamation-triangle status-warning'
+            };
+
+            const statusMessages = {
+                success: 'All tests passed! Your Supabase connection is working correctly.',
+                error: 'Some tests failed. Please check the issues below.',
+                warning: 'Tests completed with warnings. Some features may not work properly.'
+            };
+
+            html += `
+                <div class="text-center mb-4">
+                    <i class="${statusIcons[overallStatus]} status-icon"></i>
+                    <h4>${statusMessages[overallStatus]}</h4>
+                </div>
+            `;
+
+            tests.forEach(test => {
+                html += `
+                    <div class="test-result ${test.status}">
+                        <h6>
+                            <i class="fas fa-${test.status === 'success' ? 'check' : test.status === 'error' ? 'times' : 'exclamation-triangle'}"></i>
+                            ${test.name}
+                        </h6>
+                        <p class="mb-1"><strong>${test.message}</strong></p>
+                        <small class="text-muted">${test.details}</small>
+                    </div>
+                `;
+            });
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>
+

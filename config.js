@@ -2,7 +2,7 @@
 
 // Supabase Configuration
 const SUPABASE_CONFIG = {
-    url: 'https://cvrpsuhlejttckonqisc.supabase.com', // Replace with actual Supabase URL
+    url: 'https://cvrpsuhlejttckonqisc.supabase.co', // Replace with actual Supabase URL
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2cnBzdWhsZWp0dGNrb25xaXNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM3MTk3MDUsImV4cCI6MjA2OTI5NTcwNX0.ec4rqH1xJr-wOL6pR_w0quErPwTS7a8MDG0Z49He3qI' // Replace with actual Supabase anon key
 };
 
