@@ -3,10 +3,10 @@
 // Google Sheets Configuration
 const GOOGLE_SHEETS_CONFIG = {
     // Replace with your Google Sheets ID
-    SPREADSHEET_ID: 'YOUR_GOOGLE_SHEETS_ID_HERE',
+    SPREADSHEET_ID: '1ld6dMR_hJaVuy3jCa0mLWyES95-d-_OXu-8gj_ehNrQ',
     
     // Replace with your Google Apps Script Web App URL
-    WEB_APP_URL: 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE',
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzL5HP5ukoOYsIE76S_dAg6fB6XngyhzPZvDr9JKuTpd6xSYWqtlKXPLoSxndO3a6sC/exec',
     
     // Sheet names
     SHEETS: {
@@ -24,7 +24,7 @@ const GOOGLE_SHEETS_CONFIG = {
 const CLOUDINARY_CONFIG = {
     cloudName: 'dezvuqqrl',
     uploadPreset: 'unsigned_preset',
-    apiKey: 'YOUR_CLOUDINARY_API_KEY', // Optional for unsigned uploads
+    apiKey: 'https://api.cloudinary.com/v1_1/dezvuqqrl/image/upload', // Optional for unsigned uploads
     folder: 'uno-restaurant-menu' // Folder to organize uploads
 };
 
