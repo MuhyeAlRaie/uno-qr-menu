@@ -17,8 +17,8 @@ const APP_CONFIG = {
     defaultLanguage: 'en',
     supportedLanguages: ['en', 'ar'],
     soundAlerts: {
-        newOrder: './sounds/new-order.mp3',
-        quickAction: './sounds/quick-action.mp3'
+        newOrder: 'new-order.mp3',
+        quickAction: 'quick-action.mp3'
     },
     orderStatuses: {
         pending: { en: 'Pending', ar: 'في الانتظار' },

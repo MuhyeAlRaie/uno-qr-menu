@@ -340,7 +340,7 @@ class CashierApp {
         });
 
         // Create table items (assuming 20 tables)
-        for (let i = 1; i <= 20; i++) {
+        for (let i = 20; i <= 40; i++) {
             const tableItem = document.createElement('div');
             const status = activeTables.has(i.toString()) ? 'occupied' : 'available';
             
@@ -531,7 +531,7 @@ class CashierApp {
         // Refresh data every 30 seconds
         this.refreshInterval = setInterval(() => {
             this.loadData();
-        }, 30000);
+        }, 25000);
     }
 
     getStatusText(status) {
