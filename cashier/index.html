@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNO Restaurant & Café - Cashier Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Language Toggle -->
+    <div class="language-toggle">
+        <button id="langToggle" class="btn btn-outline-primary">
+            <i class="fas fa-globe"></i>
+            <span id="langText">العربية</span>
+        </button>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="dashboard-title">
+                        <i class="fas fa-cash-register"></i>
+                        <span data-en="UNO Cashier Dashboard" data-ar="لوحة تحكم الكاشير - UNO">UNO Cashier Dashboard</span>
+                    </h1>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="header-controls">
+                        <button id="refreshBtn" class="btn btn-outline-light me-2">
+                            <i class="fas fa-sync-alt"></i>
+                            <span data-en="Refresh" data-ar="تحديث">Refresh</span>
+                        </button>
+                        <button id="soundToggle" class="btn btn-outline-light me-2">
+                            <i class="fas fa-volume-up"></i>
+                            <span data-en="Sound: ON" data-ar="الصوت: مفعل">Sound: ON</span>
+                        </button>
+                        <span class="current-time" id="currentTime"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Orders Section -->
+                <div class="col-lg-8">
+                    <div class="section-card">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <i class="fas fa-clipboard-list"></i>
+                                Active Orders
+                            </h2>
+                            <div class="order-filters">
+                                <button class="filter-btn active" data-status="all">All</button>
+                                <button class="filter-btn" data-status="pending">Pending</button>
+                                <button class="filter-btn" data-status="preparing">Preparing</button>
+                                <button class="filter-btn" data-status="completed">Completed</button>
+                            </div>
+                        </div>
+                        
+                        <div class="orders-grid" id="ordersGrid">
+                            <!-- Orders will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Section -->
+                <div class="col-lg-4">
+                    <div class="section-card">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <i class="fas fa-bolt"></i>
+                                Quick Actions
+                            </h2>
+                            <span class="badge bg-danger" id="quickActionsBadge" style="display: none;">0</span>
+                        </div>
+                        
+                        <div class="quick-actions-list" id="quickActionsList">
+                            <!-- Quick actions will be loaded dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Statistics Section -->
+                    <div class="section-card mt-4">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Today's Stats
+                            </h2>
+                        </div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalOrders">0</div>
+                                <div class="stat-label">Total Orders</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="completedOrders">0</div>
+                                <div class="stat-label">Completed</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="pendingOrders">0</div>
+                                <div class="stat-label">Pending</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalRevenue">$0</div>
+                                <div class="stat-label">Revenue</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Status Section -->
+                    <div class="section-card mt-4">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <i class="fas fa-table"></i>
+                                Table Status
+                            </h2>
+                        </div>
+                        
+                        <div class="tables-grid" id="tablesGrid">
+                            <!-- Table status will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-receipt"></i>
+                        Order Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="order-info">
+                                <h6>Order Information</h6>
+                                <p><strong>Table:</strong> <span id="modalTableNumber"></span></p>
+                                <p><strong>Order Time:</strong> <span id="modalOrderTime"></span></p>
+                                <p><strong>Status:</strong> <span id="modalOrderStatus" class="badge"></span></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="order-actions">
+                                <h6>Update Status</h6>
+                                <div class="btn-group-vertical w-100">
+                                    <button class="btn btn-warning" onclick="cashierApp.updateOrderStatus(cashierApp.currentOrderId, 'preparing')">
+                                        <i class="fas fa-utensils"></i> Mark as Preparing
+                                    </button>
+                                    <button class="btn btn-success" onclick="cashierApp.updateOrderStatus(cashierApp.currentOrderId, 'completed')">
+                                        <i class="fas fa-check"></i> Mark as Completed
+                                    </button>
+                                    <button class="btn btn-danger" onclick="cashierApp.updateOrderStatus(cashierApp.currentOrderId, 'cancelled')">
+                                        <i class="fas fa-times"></i> Cancel Order
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="order-items">
+                        <h6>Order Items</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Size</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modalOrderItems">
+                                    <!-- Order items will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="order-summary">
+                        <div class="row">
+                            <div class="col-md-6 offset-md-6">
+                                <div class="summary-details">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Subtotal:</span>
+                                        <span id="modalOrderSubtotal">$0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Tax (10%):</span>
+                                        <span id="modalOrderTax">$0.00</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Total:</strong>
+                                        <strong id="modalOrderTotal">$0.00</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="cashierApp.printReceipt(cashierApp.currentOrderId)">
+                        <i class="fas fa-print"></i> Print Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Management Modal -->
+    <div class="modal fade" id="tableModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-table"></i>
+                        Table Management
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-info">
+                        <h6>Table <span id="modalTableNum"></span></h6>
+                        <p><strong>Status:</strong> <span id="modalTableStatus" class="badge"></span></p>
+                        <p><strong>Current Order:</strong> <span id="modalTableOrder"></span></p>
+                    </div>
+                    
+                    <div class="table-actions">
+                        <h6>Actions</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" onclick="cashierApp.markTableAvailable(cashierApp.currentTableNumber)">
+                                <i class="fas fa-check"></i> Mark as Available
+                            </button>
+                            <button class="btn btn-warning" onclick="cashierApp.markTableOccupied(cashierApp.currentTableNumber)">
+                                <i class="fas fa-user"></i> Mark as Occupied
+                            </button>
+                            <button class="btn btn-info" onclick="cashierApp.markTableReserved(cashierApp.currentTableNumber)">
+                                <i class="fas fa-calendar"></i> Mark as Reserved
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer">
+        <!-- Toasts will be added here dynamically -->
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Audio elements for sound alerts -->
+    <audio id="newOrderSound" preload="true">
+        <source src="new-order.mp3" type="audio/mpeg">
+        <source src="./sounds/new-order.wav" type="audio/wav">
+    </audio>
+
+    <audio id="quickActionSound" preload="true">
+        <source src="quick-action.mp3" type="audio/mpeg">
+        <source src="./sounds/quick-action.wav" type="audio/wav">
+    </audio>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Configuration -->
+    <script src="../config.js"></script>
+    
+    <!-- Supabase Client -->
+    <script src="../supabase/client.js"></script>
+    
+    <!-- Main Script -->
+    <script src="script.js"></script>
+</body>
+</html>
+
