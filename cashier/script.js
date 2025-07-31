@@ -491,8 +491,8 @@ class CashierApp {
             }
         });
 
-        // Create table items (assuming tables 1-20)
-        for (let i = 1; i <= 20; i++) {
+        // Create table items (assuming tables 1-40)
+        for (let i = 1; i <= 40; i++) {
             const tableItem = document.createElement('div');
             const status = activeTables.has(i.toString()) ? 'occupied' : 'available';
             
