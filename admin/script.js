@@ -130,8 +130,11 @@ class AdminApp {
         });
 
         // Image upload
-        document.getElementById('itemImage').addEventListener('change', (e) => {
-            this.handleImageUpload(e.target.files[0]);
+        document.getElementById('itemImage').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                await this.handleImageUpload(file);
+            }
         });
 
         // Modal events
@@ -434,7 +437,7 @@ class AdminApp {
 
         let filteredOrders = this.orders;
         if (this.currentOrderFilter !== 'all') {
-            filteredOrders = this.orders.filter(order => order.status === this.currentOrderFilter);
+            filteredOrders = filteredOrders.filter(order => order.status === this.currentOrderFilter);
         }
 
         filteredOrders.forEach(order => {
@@ -1065,6 +1068,10 @@ class AdminApp {
         const startDate = document.getElementById('startDate').value || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         const endDate = document.getElementById('endDate').value || new Date().toISOString().split('T')[0];
 
+        // Set default values
+        document.getElementById('startDate').value = startDate;
+        document.getElementById('endDate').value = endDate;
+
         // Filter orders by date range
         const filteredOrders = this.orders.filter(order => {
             const orderDate = new Date(order.order_time).toISOString().split('T')[0];
@@ -1210,17 +1217,36 @@ class AdminApp {
         container.appendChild(row);
     }
 
-    handleImageUpload(file) {
+    async handleImageUpload(file) {
         if (!file) return;
-        
-        // For now, just show a placeholder. In a real app, you'd upload to Cloudinary
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            document.getElementById('imagePreview').innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 200px;">`;
-            // In a real implementation, you'd upload to Cloudinary and set the URL
-            // document.getElementById('imageUrl').value = uploadedUrl;
-        };
-        reader.readAsDataURL(file);
+
+        this.showLoading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+
+        try {
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Cloudinary upload failed: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            const imageUrl = data.secure_url;
+
+            document.getElementById('imageUrl').value = imageUrl;
+            document.getElementById('imagePreview').innerHTML = `<img src="${imageUrl}" alt="Preview" style="max-width: 200px; max-height: 200px;">`;
+            this.showToast('Image uploaded successfully!', 'success');
+        } catch (error) {
+            console.error('Error uploading image to Cloudinary:', error);
+            this.showToast('Failed to upload image. Please try again.', 'error');
+        } finally {
+            this.showLoading(false);
+        }
     }
 
     setOrderFilter(filter) {
@@ -1291,7 +1317,7 @@ class AdminApp {
         // Show toast
         setTimeout(() => toast.classList.add('show'), 100);
         
-        // Remove toast
+        // Remove after delay
         setTimeout(() => {
             toast.classList.remove('show');
             setTimeout(() => {
