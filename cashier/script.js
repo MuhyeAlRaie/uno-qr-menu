@@ -7,7 +7,7 @@ class CashierApp {
         this.currentOrderId = null;
         this.currentTableNumber = null;
         this.currentFilter = 'all';
-        this.currentLanguage = 'en';
+        this.currentLanguage = 'ar';
         this.soundEnabled = true;
         this.refreshInterval = null;
         this.tableStatuses = new Map();

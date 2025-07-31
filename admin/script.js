@@ -10,7 +10,7 @@ class AdminApp {
         this.currentOrderFilter = 'all';
         this.currentItemFilter = 'all';
         this.currentCategoryFilter = '';
-        this.currentLanguage = 'en';
+        this.currentLanguage = 'ar';
         this.charts = {};
         this.currentEditingItemId = null;
         

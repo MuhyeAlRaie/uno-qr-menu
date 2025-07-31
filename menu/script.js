@@ -2,7 +2,7 @@
 
 class MenuApp {
     constructor() {
-        this.currentLanguage = 'en';
+        this.currentLanguage = 'ar';
         this.currentCategory = null;
         this.cart = [];
         this.categories = [];
@@ -137,7 +137,7 @@ class MenuApp {
 
     showPeopleCountModal() {
         const modal = new bootstrap.Modal(document.getElementById('peopleCountModal'));
-        document.getElementById('peopleCount').textContent = '2'; // Default to 2 people
+        document.getElementById('peopleCount').textContent = '1'; // Default to 2 people
         modal.show();
     }
 

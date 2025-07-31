@@ -14,7 +14,7 @@ const CLOUDINARY_CONFIG = {
 
 // Application Settings
 const APP_CONFIG = {
-    defaultLanguage: 'en',
+    defaultLanguage: 'ar',
     supportedLanguages: ['en', 'ar'],
     soundAlerts: {
         newOrder: 'new-order.mp3',
